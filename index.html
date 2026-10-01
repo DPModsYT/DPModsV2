@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DPMods v2 Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+    /* --- HIDE NETLIFY BADGE --- */
+#netlify-badge, 
+.netlify-badge, 
+a[href*="netlify.com"], 
+div[style*="z-index: 2147483647"],
+iframe[src*="netlify"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+        :root {
+            --ios-primary: #a855f7; 
+            --ios-primary-dim: rgba(168, 85, 247, 0.15);
+            
+            --bg-base: #000000;
+            --bg-card: #141416;
+            --bg-card-sub: #1b1b1f;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            
+            --text-main: #ffffff;
+            --text-dim: #9ca3af;
+            
+            --danger: #FF453A; 
+            --danger-bg: rgba(255, 69, 58, 0.12);
+            --success: #32D74B; 
+            --warning: #FF9F0A;
+            --inactive: #71717a;
+            
+            --nav-height: 80px;
+            color-scheme: dark;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        input, textarea, select { user-select: auto; font-family: inherit; } 
+        ::-webkit-scrollbar { display: none; }
+        
+        body { 
+            background: var(--bg-base); color: var(--text-main); 
+            min-height: 100dvh; overflow-x: hidden; overscroll-behavior-y: contain; 
+            background-image: radial-gradient(circle at top right, rgba(168, 85, 247, 0.08), transparent 40%);
+            background-attachment: fixed;
+        }
+
+        :focus-visible { outline: none; }
+
+        .app-container { max-width: 600px; margin: 0 auto; padding-bottom: calc(var(--nav-height) + 60px); display: flex; flex-direction: column; min-height: 100dvh; position: relative;}
+
+        /* --- WATERMARK --- */
+        .watermark { text-align: center; font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.18); letter-spacing: 2px; text-transform: uppercase; padding: 25px 0 10px; pointer-events: none; }
+        
+        /* --- DYNAMIC ISLAND SNACKBAR --- */
+        #dynamic-island {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%) scale(0.85);
+            background: #18181b; color: #fff; border-radius: 40px; padding: 12px 22px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-weight: 600; font-size: 0.9rem; letter-spacing: 0.2px; 
+            opacity: 0; visibility: hidden; z-index: 99999; pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 16px 35px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.1);
+            white-space: nowrap;
+        }
+        #dynamic-island.show { opacity: 1; visibility: visible; transform: translateX(-50%) scale(1); }
+
+        /* --- LANGUAGE OVERLAY --- */
+        #lang-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(15px); z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; opacity: 0; visibility: hidden; transition: 0.3s ease; padding: 20px;}
+        #lang-overlay.active { opacity: 1; visibility: visible; }
+        .lang-btn { background: var(--bg-card); border: 1px solid var(--border-glass); padding: 16px 30px; border-radius: 20px; font-size: 1.1rem; font-weight: 700; color: #fff; cursor: pointer; width: 100%; max-width: 280px; text-align: center; transition: 0.2s;}
+        .lang-btn:active { transform: scale(0.96); background: var(--ios-primary); }
+
+        /* --- INPUTS & TOGGLES --- */
+        .ios-card { background: var(--bg-card); border-radius: 22px; padding: 18px; border: 1px solid var(--border-glass); margin-bottom: 14px; }
+        
+        .input-group { margin-bottom: 14px; text-align: start; width: 100%; }
+        .input-group label { display: block; font-size: 0.72rem; color: var(--text-dim); font-weight: 600; margin-bottom: 6px; padding: 0 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .input-group input, .input-group textarea { width: 100%; background: #0c0c0e; border: 1px solid var(--border-glass); border-radius: 16px; padding: 14px 18px; color: #fff; font-size: 0.95rem; font-weight: 500; outline: none; transition: border-color 0.2s;}
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--ios-primary); }
+        .input-row { display: flex; gap: 10px; }
+        .input-row .input-group { flex: 1; margin-bottom: 6px; }
+
+        .ios-toggle { appearance: none; width: 46px; height: 26px; background: rgba(255,255,255,0.15); border-radius: 20px; position: relative; outline: none; cursor: pointer; transition: 0.25s;}
+        .ios-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background: #fff; border-radius: 50%; transition: 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .ios-toggle:checked { background: var(--success); }
+        .ios-toggle:checked::after { transform: translateX(20px); }
+
+        .btn { width: 100%; padding: 16px; border-radius: 18px; border: none; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, opacity 0.15s; color: #fff; font-family: inherit;}
+        .btn-primary { background: var(--ios-primary); box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35); }
+        .btn-primary:active { transform: scale(0.97); opacity: 0.85;}
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; z-index: 500; background: #000; transition: 0.4s ease;}
+        .login-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 350px; }
+        .logo-icon { font-size: 4rem; color: var(--ios-primary); margin-bottom: 8px; }
+        #login-screen h1 { font-size: 2rem; font-weight: 800; line-height: 1.1; margin-bottom: 24px; text-transform: uppercase; letter-spacing: -0.5px;}
+
+        /* --- HEADER --- */
+        .page-header { padding: 45px 20px 14px; display: flex; justify-content: space-between; align-items: flex-end; position: sticky; top: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .app-main-title { font-size: 2.1rem; font-weight: 800; letter-spacing: -1px; color: #fff;}
+        .header-actions { display: flex; gap: 8px; align-items: center;}
+        
+        .btn-icon { background: rgba(255,255,255,0.08); color: #fff; width: 38px; height: 38px; border-radius: 19px; font-size: 0.95rem; border: none; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.15s;}
+        .btn-icon:active { transform: scale(0.88); }
+
+        /* --- SEARCH & PILL FILTERS --- */
+        .search-bar-container { padding: 12px 20px 0; position: sticky; top: 88px; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 49; }
+        .search-bar { width: 100%; background: #0e0e11; border: 1px solid var(--border-glass); border-radius: 15px; padding: 13px 16px 13px 42px; color: #fff; font-size: 0.95rem; outline: none; font-weight: 500; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%239ca3af'%3E%3Cpath d='M416 208c0 45.9-14.9 88.3-40 122.7L502.6 456.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 15px center; background-size: 15px;}
+        
+        .filter-chips-row { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; }
+        .filter-chip { background: rgba(255,255,255,0.06); border: 1px solid var(--border-glass); color: var(--text-dim); padding: 7px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .filter-chip.active { background: #fff; color: #000; font-weight: 700; border-color: #fff; }
+
+        /* --- HARDWARE-ACCELERATED CARDS --- */
+        .content-area { padding: 0 18px; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+        
+        .list-card { background: var(--bg-card); border-radius: 20px; padding: 16px; border: 1px solid var(--border-glass); will-change: transform; transition: transform 0.15s ease; }
+        .list-card:active { transform: scale(0.985); }
+        
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;}
+        .card-title { font-size: 1.15rem; font-weight: 800; color: #fff; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace;}
+
+        .card-actions { display: flex; gap: 8px; margin-top: 12px;}
+        .btn-xs { flex: 1; padding: 11px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; color: #fff; background: rgba(255,255,255,0.06); border: none; display: flex; justify-content: center; align-items: center; gap: 6px; transition: 0.15s; }
+        .btn-xs:active { transform: scale(0.94); background: rgba(255,255,255,0.12);}
+
+        /* --- GLOBAL FLOATING BUTTON --- */
+        .fab-global { 
+            position: fixed; bottom: calc(var(--nav-height) + 16px); right: 18px; width: 62px; height: 62px; 
+            border-radius: 31px; color: #fff; border: none; font-size: 1.5rem; display: none; justify-content: center; 
+            align-items: center; box-shadow: 0 10px 28px rgba(0,0,0,0.65); cursor: pointer; z-index: 900; 
+            transition: transform 0.18s ease; 
+        }
+        [dir="rtl"] .fab-global { right: auto; left: 18px; }
+        .fab-global:active { transform: scale(0.88); }
+        #fab-add-key { background: var(--ios-primary); }
+        #fab-add-ban { background: var(--danger); }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: rgba(14,14,16,0.85); backdrop-filter: blur(25px); border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; padding: 8px; }
+        .nav-item.active { color: var(--ios-primary); }
+        .nav-item i { font-size: 1.35rem; }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* --- MODALS --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 2000; opacity: 0; visibility: hidden; transition: 0.3s ease; pointer-events: none; display: flex; justify-content: center; align-items: flex-end;}
+        .modal-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+        .modal-card { background: #161618; width: 100%; max-width: 600px; border-radius: 28px 28px 0 0; padding: 22px 22px 36px; transform: translateY(100%); transition: 0.35s cubic-bezier(0.175, 0.885, 0.32, 1); border-top: 1px solid var(--border-glass); max-height: 88vh; overflow-y: auto;}
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        .modal-handle { width: 38px; height: 4px; background: rgba(255,255,255,0.25); border-radius: 2px; margin: -8px auto 18px; }
+
+        .load-more-btn { background: var(--bg-card); border: 1px solid var(--border-glass); color: var(--ios-primary); padding: 14px; border-radius: 16px; font-weight: 700; font-size: 0.9rem; width: 100%; cursor: pointer; margin-top: 8px; margin-bottom: 12px; }
+
+        /* --- NEW EDITABLE LIVE GUI (Matches Screenshot) --- */
+        #pv-container { padding-top: 45px; margin-bottom: 20px; }
+        #preview-card { background: #ffffff; border-radius: 24px; padding: 20px 16px; position: relative; color: #000; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; }
+        #pv-avatar { width: 75px; height: 75px; border-radius: 50%; position: absolute; top: -37px; left: 50%; transform: translateX(-50%); border: 3px solid #ffffff; box-shadow: 0 5px 15px rgba(0,0,0,0.2); object-fit: cover; background: #000;}
+        
+        [contenteditable="true"] { outline: none; transition: background 0.2s, border-radius 0.2s; }
+        [contenteditable="true"]:focus { background: rgba(0,0,0,0.05); border-radius: 6px; box-shadow: 0 0 0 2px rgba(168,85,247,0.5); cursor: text;}
+
+        #pv-title { font-size: 1.6rem; font-weight: 700; margin-top: 30px; margin-bottom: 16px; color: #000; cursor: text;}
+        #pv-notice-box { background: #f0f4f8; border: 1px solid #d1d5db; padding: 12px; border-radius: 12px; font-size: 0.85rem; color: #111; margin-bottom: 20px; font-weight: 500; cursor: text;}
+        
+        .pv-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+        .pv-input-col { flex: 1; text-align: left; }
+        .pv-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #4b5563; margin-bottom: 6px; margin-left: 4px; display: block; cursor: text;}
+        .pv-dummy-input { background: #fff; border: 1px solid #d1d5db; padding: 12px 14px; border-radius: 10px; color: #111; font-size: 0.9rem; flex: 1; width: 100%; cursor: text;}
+        .pv-action-btn { background: #1c1c1e; color: #fff; border: none; padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: text;}
+        
+        .pv-bottom-row { display: flex; gap: 8px; margin-top: 15px; margin-bottom: 15px; }
+        .pv-btn-btm { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: text; text-align: center;}
+        #pv-btn-admin { background: #fff; border: 1px solid #374151; color: #000; }
+        #pv-btn-trial { background: #f59e0b; border: none; color: #fff; }
+        #pv-btn-login { background: #1c1c1e; border: none; color: #fff; }
+        
+        #pv-watermark { font-size: 0.7rem; color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; padding: 6px 14px; border-radius: 20px; display: inline-block; font-weight: 600; cursor: text;}
+    </style>
+</head>
+<body dir="ltr">
+
+    <!-- DYNAMIC ISLAND -->
+    <div id="dynamic-island"><i id="di-icon" class="fas fa-check-circle"></i> <span id="di-msg"></span></div>
+
+    <!-- LANGUAGE OVERLAY -->
+    <div id="lang-overlay">
+        <h2 style="color:#fff; font-weight:800; margin-bottom:8px; text-align:center;">Select Language</h2>
+        <div class="lang-btn" onclick="setLang('en')">English (Default)</div>
+        <div class="lang-btn" onclick="setLang('hi')">हिन्दी (Hindi)</div>
+        <div class="lang-btn" onclick="setLang('es')">Español (Spanish)</div>
+        <div class="lang-btn" onclick="setLang('bn')">বাংলা (Bangla)</div>
+        <div class="lang-btn" onclick="setLang('ar')">العربية (Arabic)</div>
+    </div>
+
+    <!-- FIREBASE LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-wrapper">
+            <div class="logo-icon"><i class="fas fa-fingerprint"></i></div>
+            <h1 data-i18n="login_title">DPMODS V2</h1>
+            
+            <div class="ios-card" style="width: 100%; padding: 22px; margin-bottom:14px;">
+                <div class="input-group">
+                    <label data-i18n="lbl_db_url">Firebase URL</label>
+                    <input type="text" id="auth-url" placeholder="https://database.firebaseio.com">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="lbl_db_sec">Admin Secret (Token)</label>
+                    <input type="password" id="auth-secret" placeholder="Token">
+                </div>
+                <button id="login-btn" class="btn btn-primary" onclick="login()" style="margin-top: 8px;" data-i18n="btn_connect">CONNECT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container" id="main-app" style="display: none;">
+        
+        <div class="page-header">
+            <div class="header-title-box">
+                <span class="app-main-title" id="page-title-text" data-i18n="nav_keys">Keys</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="document.getElementById('lang-overlay').classList.add('active')"><i class="fas fa-globe"></i></button>
+                <button class="btn-icon" onclick="fetchDatabase()"><i class="fas fa-sync-alt" id="reload-icon"></i></button>
+                <button class="btn-icon" style="color:var(--danger);" onclick="logout()"><i class="fas fa-power-off"></i></button>
+            </div>
+        </div>
+
+        <!-- KEYS VIEW -->
+        <div id="view-keys" class="view active">
+            <div class="search-bar-container">
+                <div class="input-group" style="margin-bottom: 8px;">
+                    <input type="text" class="search-bar" id="search-keys" placeholder="Search Keys or Device ID..." oninput="handleSearch()">
+                </div>
+                <div class="filter-chips-row">
+                    <div class="filter-chip active" onclick="setFilter('keys', 'all', this)" data-i18n="filt_all">All</div>
+                    <div class="filter-chip" onclick="setFilter('keys', 'active', this)" data-i18n="filt_act">Active</div>
+                    <div class="filter-chip" onclick="setFilter('keys', 'inactive', this)" data-i18n="filt_inact">Inactive</div>
+                    <div class="filter-chip" onclick="setFilter('keys', 'expired', this)" data-i18n="filt_exp">Expired</div>
+                </div>
+            </div>
+            <div class="content-area" id="keys-list"></div>
+            <div style="padding: 0 18px;" id="keys-load-more-box"></div>
+        </div>
+
+        <!-- BANS VIEW -->
+        <div id="view-bans" class="view">
+            <div class="search-bar-container">
+                <div class="input-group" style="margin-bottom: 8px;">
+                    <input type="text" class="search-bar" id="search-bans" placeholder="Search Banned HWID..." oninput="renderBans()">
+                </div>
+            </div>
+            <div class="content-area" id="bans-list"></div>
+        </div>
+
+        <!-- TRIALS VIEW -->
+        <div id="view-trials" class="view">
+            <div class="search-bar-container">
+                <div class="input-group" style="margin-bottom: 8px;">
+                    <input type="text" class="search-bar" id="search-trials" placeholder="Search Trial HWID..." oninput="renderTrials()">
+                </div>
+            </div>
+            <div class="content-area" id="trials-list"></div>
+        </div>
+
+        <!-- CONFIG VIEW -->
+        <div id="view-config" class="view">
+            <div class="content-area">
+                
+                <h3 style="margin: 10px 0 6px 6px; color:var(--text-dim); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;" data-i18n="lbl_preview">Live App UI (Click to Edit)</h3>
+                
+                <!-- NEW EDITABLE GUI PREVIEW (Matches User Screenshot perfectly) -->
+                <div id="pv-container">
+                    <div id="preview-card">
+                        <img id="pv-avatar" src="https://via.placeholder.com/150">
+                        
+                        <div id="pv-title" contenteditable="true" onkeyup="updateFromPreview('pv-title')">Berlin Mods</div>
+                        <div id="pv-notice-box" contenteditable="true" onkeyup="updateFromPreview('pv-notice-box')">For Activation Key:- Copy your APK ID & send it to Admin</div>
+                        
+                        <div class="pv-row">
+                            <div class="pv-input-col">
+                                <span class="pv-label" id="pv-apk-lbl" contenteditable="true" onkeyup="updateFromPreview('pv-apk-lbl')">APK ID</span>
+                                <div class="pv-dummy-input">87d7ea7faf897f9f</div>
+                            </div>
+                            <div class="pv-action-btn" id="pv-btn-copy" contenteditable="true" onkeyup="updateFromPreview('pv-btn-copy')">COPY</div>
+                        </div>
+
+                        <div class="pv-row">
+                            <div class="pv-input-col">
+                                <span class="pv-label" id="pv-key-lbl" contenteditable="true" onkeyup="updateFromPreview('pv-key-lbl')">ACTIVATION KEY</span>
+                                <div class="pv-dummy-input" id="pv-key-hint" contenteditable="true" onkeyup="updateFromPreview('pv-key-hint')" style="color:#9ca3af;">Enter key</div>
+                            </div>
+                            <div class="pv-action-btn" id="pv-btn-paste" contenteditable="true" onkeyup="updateFromPreview('pv-btn-paste')">PASTE</div>
+                        </div>
+
+                        <div class="pv-bottom-row">
+                            <div class="pv-btn-btm" id="pv-btn-admin" contenteditable="true" onkeyup="updateFromPreview('pv-btn-admin')">ADMIN</div>
+                            <div class="pv-btn-btm" id="pv-btn-trial" contenteditable="true" onkeyup="updateFromPreview('pv-btn-trial')">TRIAL</div>
+                            <div class="pv-btn-btm" id="pv-btn-login" contenteditable="true" onkeyup="updateFromPreview('pv-btn-login')">LOGIN</div>
+                        </div>
+
+                        <div id="pv-watermark" contenteditable="true" onkeyup="updateFromPreview('pv-watermark')">Panel: DPMods ✧</div>
+                    </div>
+                </div>
+
+                <div class="ios-card" style="margin-top: 10px;">
+                    <h3 style="margin-bottom: 12px; color:var(--ios-primary); font-size:0.9rem; text-transform:uppercase;"><i class="fas fa-sliders-h"></i> System Settings</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding: 4px 0;">
+                        <span style="font-weight:700; font-size:0.9rem; color:var(--success);">Show Dialog</span>
+                        <input type="checkbox" class="ios-toggle" id="cfg-dialog">
+                    </div>
+                    <div class="input-group"><label>Avatar Image URL</label><input type="text" id="cfg-avatar" oninput="syncToPreview()"></div>
+                    <div class="input-group"><label>Admin Telegram Link</label><input type="text" id="cfg-admin-link"></div>
+                    <div class="input-group"><label>Default Ban Message</label><textarea id="cfg-ban-msg" rows="2"></textarea></div>
+                    <div class="input-group" style="display:none;"><label>Ban Title</label><input type="text" id="ui-ban-title"></div>
+                </div>
+
+                <div class="ios-card">
+                    <h3 style="margin-bottom: 12px; color:var(--success); font-size:0.9rem; text-transform:uppercase;"><i class="fas fa-cloud-download-alt"></i> Update System</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding: 4px 0;">
+                        <span style="font-weight:700; font-size:0.9rem; color:var(--success);">Enable Update</span>
+                        <input type="checkbox" class="ios-toggle" id="upd-status">
+                    </div>
+                    <div class="input-group"><label>Update Title</label><input type="text" id="upd-title"></div>
+                    <div class="input-group"><label>Update Message</label><textarea id="upd-msg" rows="2"></textarea></div>
+                    <div class="input-row">
+                        <div class="input-group"><label>Button Text</label><input type="text" id="upd-btn"></div>
+                        <div class="input-group"><label>Download URL</label><input type="text" id="upd-url"></div>
+                    </div>
+                </div>
+
+                <div class="ios-card">
+                    <h3 style="margin-bottom: 12px; color:var(--ios-primary); font-size:0.9rem; text-transform:uppercase;"><i class="fas fa-hourglass-half"></i> Trial Settings</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding: 4px 0;">
+                        <span style="font-weight:700; font-size:0.9rem; color:var(--success);">Enable Trials</span>
+                        <input type="checkbox" class="ios-toggle" id="trl-status" onchange="document.getElementById('pv-btn-trial').style.display = this.checked ? 'block' : 'none';">
+                    </div>
+                    <div class="input-group"><label>Duration (Minutes)</label><input type="number" id="trl-mins"></div>
+                </div>
+
+                <!-- Hidden inputs to store live edited values -->
+                <div style="display:none;">
+                    <input type="text" id="ui-main-title"><input type="text" id="ui-notice"><input type="text" id="ui-apk-lbl"><input type="text" id="ui-key-lbl"><input type="text" id="ui-key-hint"><input type="text" id="ui-btn-copy"><input type="text" id="ui-btn-paste"><input type="text" id="ui-btn-login"><input type="text" id="ui-btn-admin"><input type="text" id="ui-btn-trial"><input type="text" id="ui-watermark">
+                </div>
+
+                <button class="btn btn-primary" onclick="saveConfig()" style="margin-bottom:15px;" data-i18n="btn_save">SAVE ALL SETTINGS</button>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- GLOBAL FABs -->
+    <button class="fab-global" id="fab-add-key" onclick="openKeyModal()"><i class="fas fa-plus"></i></button>
+    <button class="fab-global" id="fab-add-ban" onclick="openBanModal()"><i class="fas fa-ban"></i></button>
+
+    <!-- MODALS -->
+
+    <!-- Add Key Modal -->
+    <div class="modal-overlay" id="key-modal">
+        <div class="modal-card">
+            <div class="modal-handle"></div>
+            <h2 style="font-size:1.25rem; font-weight:800; text-align:center; margin-bottom:18px; color:#fff;" data-i18n="mod_key_title">Generate Key</h2>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:16px;">
+                <span style="font-weight:600; font-size:0.9rem;" data-i18n="mod_bulk_en">Generate Bulk Keys</span>
+                <input type="checkbox" class="ios-toggle" id="chk-bulk" onchange="document.getElementById('bulk-qty-row').style.display = this.checked ? 'block' : 'none'; document.getElementById('single-key-row').style.display = this.checked ? 'none' : 'block';">
+            </div>
+
+            <div class="input-group" id="single-key-row">
+                <label data-i18n="mod_lbl_key">Access Key</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="mod-key-id" placeholder="e.g. VIP-001" style="font-family: 'JetBrains Mono', monospace;">
+                    <button class="btn" style="width:52px; background:rgba(255,255,255,0.08); padding:0; border:1px solid var(--border-glass);" onclick="randomKey()"><i class="fas fa-dice" style="color:var(--ios-primary);"></i></button>
+                </div>
+            </div>
+
+            <div class="input-group" id="bulk-qty-row" style="display:none;">
+                <label data-i18n="mod_lbl_qty">Quantity to Generate</label>
+                <input type="number" id="mod-bulk-qty" value="10" min="2" max="100">
+            </div>
+
+            <div class="input-group">
+                <label data-i18n="mod_lbl_exp">Expiry Date</label>
+                <input type="date" id="mod-key-date">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button class="btn" style="background: rgba(255,255,255,0.08);" onclick="closeModals()" data-i18n="btn_cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="saveKey()"><span id="modal-key-btn-text" data-i18n="btn_save">Generate</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Key Modal -->
+    <div class="modal-overlay" id="edit-key-modal">
+        <div class="modal-card">
+            <div class="modal-handle"></div>
+            <h2 class="modal-title" style="color:var(--ios-primary); font-size:1.25rem; font-weight:800; text-align:center; margin-bottom:18px;" data-i18n="mod_edit_title">Edit Key</h2>
+            
+            <div class="input-group">
+                <label>Key ID</label>
+                <input type="text" id="edit-key-id" readonly style="opacity:0.6; font-family:'JetBrains Mono', monospace;">
+            </div>
+            <div class="input-group">
+                <label data-i18n="mod_lbl_bind">Bind ID (HWID)</label>
+                <input type="text" id="edit-key-hwid" placeholder="Leave empty to unlink" style="font-family:'JetBrains Mono', monospace;">
+            </div>
+            <div class="input-group">
+                <label data-i18n="mod_lbl_exp">Expiry Date</label>
+                <input type="date" id="edit-key-date">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button class="btn" style="background: rgba(255,255,255,0.08);" onclick="closeModals()" data-i18n="btn_cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEditedKey()" data-i18n="btn_save">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Ban Modal -->
+    <div class="modal-overlay" id="ban-modal">
+        <div class="modal-card">
+            <div class="modal-handle"></div>
+            <h2 class="modal-title" style="color: var(--danger); font-size:1.25rem; font-weight:800; text-align:center; margin-bottom:18px;" data-i18n="mod_ban_title">Block Hardware</h2>
+            
+            <div class="input-group">
+                <label data-i18n="mod_lbl_hwid">HWID to Block</label>
+                <input type="text" id="mod-ban-id" placeholder="e.g. hacker_device_123" style="font-family: 'JetBrains Mono', monospace;">
+            </div>
+            <div class="input-group">
+                <label>Ban Reason</label>
+                <input type="text" id="mod-ban-reason" placeholder="e.g. Banned for bypassing.">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button class="btn" style="background: rgba(255,255,255,0.08);" onclick="closeModals()" data-i18n="btn_cancel">Cancel</button>
+                <button class="btn" style="background: var(--danger);" onclick="saveBan()" data-i18n="btn_block">Block</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVBAR -->
+    <div class="bottom-nav" id="bottom-nav" style="display: none;">
+        <div class="nav-item active" onclick="nav('keys', this, trans('nav_keys'))" id="nav-tab-keys">
+            <i class="fas fa-key"></i><span data-i18n="nav_keys">Keys</span>
+        </div>
+        <div class="nav-item" onclick="nav('bans', this, trans('nav_bans'))" id="nav-tab-bans">
+            <i class="fas fa-user-slash"></i><span data-i18n="nav_bans">Bans</span>
+        </div>
+        <div class="nav-item" onclick="nav('trials', this, 'Trials')" id="nav-tab-trials">
+            <i class="fas fa-hourglass-half"></i><span>Trials</span>
+        </div>
+        <div class="nav-item" onclick="nav('config', this, trans('nav_cfg'))" id="nav-tab-config">
+            <i class="fas fa-cogs"></i><span data-i18n="nav_cfg">Config</span>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            en: {
+                login_title: "DPMODS V2", lbl_db_url: "Firebase URL", lbl_db_sec: "Admin Secret (Token)", btn_connect: "CONNECT",
+                nav_keys: "Keys", nav_bans: "Bans", nav_cfg: "Config", lbl_preview: "Live App UI (Click to Edit)",
+                btn_save: "SAVE ALL SETTINGS", filt_all: "All", filt_act: "Active", filt_inact: "Inactive", filt_exp: "Expired",
+                mod_key_title: "Generate Key", mod_bulk_en: "Bulk Keys", mod_lbl_key: "Access Key", mod_lbl_qty: "Quantity", mod_lbl_exp: "Expiry Date",
+                mod_edit_title: "Edit Key", mod_lbl_bind: "Bind ID (HWID)", mod_ban_title: "Block Hardware", mod_lbl_hwid: "HWID to Block", btn_block: "Block", btn_cancel: "Cancel",
+                err_rules: "Connection Failed! Check URL or Secret.", err_url_sec: "Enter URL and Token!", msg_success: "Action Successful!", msg_copy: "Copied!", empty_keys: "No Data Found"
+            },
+            hi: {
+                login_title: "DPMODS V2", lbl_db_url: "फायरबेस URL", lbl_db_sec: "एडमिन सीक्रेट (टोकन)", btn_connect: "कनेक्ट करें",
+                nav_keys: "कुंजियाँ", nav_bans: "प्रतिबंध", nav_cfg: "सेटिंग्स", lbl_preview: "लाइव ऐप UI (बदलने के लिए क्लिक करें)",
+                btn_save: "सभी सेटिंग्स सेव करें", filt_all: "सभी", filt_act: "सक्रिय", filt_inact: "निष्क्रिय", filt_exp: "समाप्त",
+                mod_key_title: "नई कुंजी बनाएं", mod_bulk_en: "एक साथ कई कुंजियाँ", mod_lbl_key: "एक्सेस कुंजी", mod_lbl_qty: "मात्रा", mod_lbl_exp: "समाप्ति तिथि",
+                mod_edit_title: "बदलाव करें", mod_lbl_bind: "डिवाइस ID (HWID)", mod_ban_title: "डिवाइस ब्लॉक करें", mod_lbl_hwid: "HWID", btn_block: "ब्लॉक करें", btn_cancel: "रद्द करें",
+                err_rules: "कनेक्शन फेल! URL या टोकन जांचें।", err_url_sec: "URL और टोकन दर्ज करें!", msg_success: "सफलतापूर्वक पूर्ण!", msg_copy: "कॉपी किया गया!", empty_keys: "कोई डेटा नहीं मिला"
+            },
+            es: {
+                login_title: "DPMODS V2", lbl_db_url: "URL de Firebase", lbl_db_sec: "Secreto (Token)", btn_connect: "CONECTAR",
+                nav_keys: "Claves", nav_bans: "Baneos", nav_cfg: "Config", lbl_preview: "IU de la App (Clic para Editar)",
+                btn_save: "GUARDAR TODO", filt_all: "Todos", filt_act: "Activo", filt_inact: "Inactivo", filt_exp: "Expirado",
+                mod_key_title: "Generar Clave", mod_bulk_en: "Masivas", mod_lbl_key: "Clave", mod_lbl_qty: "Cantidad", mod_lbl_exp: "Expiración",
+                mod_edit_title: "Editar Clave", mod_lbl_bind: "HWID", mod_ban_title: "Bloquear", mod_lbl_hwid: "HWID", btn_block: "Bloquear", btn_cancel: "Cancelar",
+                err_rules: "¡Error de conexión!", err_url_sec: "¡Ingrese URL y Token!", msg_success: "¡Exitoso!", msg_copy: "¡Copiado!", empty_keys: "Sin Datos"
+            },
+            bn: {
+                login_title: "DPMODS V2", lbl_db_url: "ফায়ারবেস URL", lbl_db_sec: "টোকেন", btn_connect: "সংযোগ করুন",
+                nav_keys: "কী (Keys)", nav_bans: "ব্যান", nav_cfg: "কনফিগ", lbl_preview: "লাইভ প্রিভিউ (এডিট করতে ক্লিক করুন)",
+                btn_save: "সংরক্ষণ করুন", filt_all: "সব", filt_act: "সক্রিয়", filt_inact: "নিষ্ক্রিয়", filt_exp: "মেয়াদোত্তীর্ণ",
+                mod_key_title: "কী তৈরি করুন", mod_bulk_en: "বাল্ক কী", mod_lbl_key: "অ্যাক্সেস কী", mod_lbl_qty: "পরিমাণ", mod_lbl_exp: "মেয়াদ শেষ",
+                mod_edit_title: "পরিবর্তন", mod_lbl_bind: "HWID", mod_ban_title: "ব্লক করুন", mod_lbl_hwid: "HWID", btn_block: "ব্লক", btn_cancel: "বাতিল",
+                err_rules: "সংযোগ ব্যর্থ হয়েছে!", err_url_sec: "URL এবং টোকেন দিন!", msg_success: "সফল!", msg_copy: "কপি করা হয়েছে!", empty_keys: "কোনো ডেটা নেই"
+            },
+            ar: {
+                login_title: "DPMODS V2", lbl_db_url: "رابط Firebase", lbl_db_sec: "الرمز السري", btn_connect: "اتصال",
+                nav_keys: "المفاتيح", nav_bans: "الحظر", nav_cfg: "إعدادات", lbl_preview: "معاينة واجهة التطبيق (انقر للتعديل)",
+                btn_save: "حفظ الإعدادات", filt_all: "الكل", filt_act: "نشط", filt_inact: "غير نشط", filt_exp: "منتهي",
+                mod_key_title: "إنشاء مفتاح", mod_bulk_en: "متعدد", mod_lbl_key: "مفتاح", mod_lbl_qty: "الكمية", mod_lbl_exp: "الانتهاء",
+                mod_edit_title: "تعديل", mod_lbl_bind: "HWID", mod_ban_title: "حظر", mod_lbl_hwid: "HWID", btn_block: "حظر", btn_cancel: "إلغاء",
+                err_rules: "فشل الاتصال!", err_url_sec: "أدخل الرابط والرمز!", msg_success: "نجاح!", msg_copy: "تم النسخ!", empty_keys: "لا توجد بيانات"
+            }
+        };
+
+        // --- SAFE STORAGE HELPERS ---
+        function getStorage(key, fallback = null) { try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; } }
+        function setStorage(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+        let currentLang = getStorage('dp_v2_lang', null);
+        let DB_URL = "";
+        let DB_SECRET = "";
+        let DB = { nmms_config: { keys: {}, banned_devices: {}, trials: {}, ui_texts: {}, update: {}, trial: {} } }; 
+        let lastSyncedKeysHash = "";
+        let currentFilter = { keys: 'all' };
+        let isLoggedIn = false;
+        
+        const PAGE_CHUNK = 40;
+        let visibleKeysCount = PAGE_CHUNK;
+        let searchDebounceTimer = null;
+
+        window.onload = () => {
+            // Restore last credentials completely for auto-fill
+            const lastUrl = getStorage('dp_last_url', '');
+            const lastSecret = getStorage('dp_last_secret', '');
+            
+            if (lastUrl) document.getElementById('auth-url').value = lastUrl;
+            if (lastSecret) document.getElementById('auth-secret').value = lastSecret;
+
+            if (!currentLang) {
+                document.getElementById('lang-overlay').classList.add('active');
+            } else {
+                setLang(currentLang, false);
+            }
+        };
+
+        function setLang(lang, save = true) {
+            currentLang = lang;
+            if (save) setStorage('dp_v2_lang', lang);
+            document.getElementById('lang-overlay').classList.remove('active');
+            
+            if (lang === 'ar') document.body.setAttribute('dir', 'rtl');
+            else document.body.setAttribute('dir', 'ltr');
+
+            applyTranslations();
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang] && i18n[currentLang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = i18n[currentLang][key];
+                    else el.innerHTML = el.innerHTML.replace(el.innerText, i18n[currentLang][key]);
+                }
+            });
+            const activeNav = document.querySelector('.nav-item.active');
+            if (activeNav) activeNav.click();
+        }
+
+        function trans(key) { return (i18n[currentLang] && i18n[currentLang][key]) || key; }
+
+        async function login() {
+            const btn = document.getElementById('login-btn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            
+            let url = document.getElementById('auth-url').value.trim();
+            const secret = document.getElementById('auth-secret').value.trim();
+
+            if (!url || !secret) {
+                showIsland(trans('err_url_sec'), "error");
+                btn.innerHTML = trans('btn_connect'); return;
+            }
+
+            url = url.replace(/\/+$/, '');
+            DB_URL = url;
+            DB_SECRET = secret;
+
+            try {
+                const res = await fetch(`${DB_URL}/.json?auth=${DB_SECRET}`);
+                if (!res.ok) throw new Error("Auth Failed");
+                
+                const data = await res.json();
+                if (data && typeof data === 'object') {
+                    DB = data;
+                    if (!DB.nmms_config) DB.nmms_config = {};
+                    if (!DB.nmms_config.keys) DB.nmms_config.keys = {};
+                    if (!DB.nmms_config.banned_devices) DB.nmms_config.banned_devices = {};
+                    if (!DB.nmms_config.trials) DB.nmms_config.trials = {};
+                    if (!DB.nmms_config.ui_texts) DB.nmms_config.ui_texts = {};
+                    if (!DB.nmms_config.update) DB.nmms_config.update = {};
+                    if (!DB.nmms_config.trial) DB.nmms_config.trial = {};
+                }
+
+                // Strictly save for reload
+                setStorage('dp_last_url', DB_URL);
+                setStorage('dp_last_secret', DB_SECRET);
+                
+                isLoggedIn = true;
+
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.style.opacity = '0';
+                loginScreen.style.pointerEvents = 'none';
+                
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex'; 
+                    document.getElementById('bottom-nav').style.display = 'flex';
+                    
+                    loadConfig(); 
+                    currentFilter.keys = 'all'; // Ensure all selected
+                    visibleKeysCount = PAGE_CHUNK;
+                    renderKeys(); 
+                    renderBans(); 
+                    renderTrials();
+                    
+                    showIsland(trans('msg_success'), "success", "fa-unlock-alt");
+                    nav('keys', document.getElementById('nav-tab-keys'), trans('nav_keys'));
+                }, 300);
+
+                if (window.syncInterval) clearInterval(window.syncInterval);
+                window.syncInterval = setInterval(silentBackgroundSync, 12000);
+
+            } catch (e) {
+                showIsland(trans('err_rules'), "error");
+                btn.innerHTML = trans('btn_connect');
+            }
+        }
+
+        async function fetchDatabase() {
+            const icon = document.getElementById('reload-icon');
+            icon.classList.add('spin');
+            try {
+                const res = await fetch(`${DB_URL}/.json?auth=${DB_SECRET}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && typeof data === 'object') {
+                        DB = data;
+                        if (!DB.nmms_config) DB.nmms_config = {};
+                        if (!DB.nmms_config.keys) DB.nmms_config.keys = {};
+                        if (!DB.nmms_config.banned_devices) DB.nmms_config.banned_devices = {};
+                        if (!DB.nmms_config.trials) DB.nmms_config.trials = {};
+                        if (!DB.nmms_config.ui_texts) DB.nmms_config.ui_texts = {};
+                        if (!DB.nmms_config.update) DB.nmms_config.update = {};
+                        if (!DB.nmms_config.trial) DB.nmms_config.trial = {};
+                    }
+                    loadConfig(); 
+                    renderKeys(); 
+                    renderBans(); 
+                    renderTrials();
+                    showIsland(trans('msg_success'), "success", "fa-sync-alt");
+                }
+            } catch (e) {}
+            icon.classList.remove('spin');
+        }
+
+        async function silentBackgroundSync() {
+            try {
+                const res = await fetch(`${DB_URL}/nmms_config/keys.json?auth=${DB_SECRET}`);
+                if (res.ok) {
+                    const keysData = await res.json() || {};
+                    const newHash = JSON.stringify(keysData);
+                    if (newHash !== lastSyncedKeysHash) {
+                        DB.nmms_config.keys = keysData;
+                        lastSyncedKeysHash = newHash;
+                        renderKeys();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function syncNode(nodePath, dataObj) {
+            try {
+                const options = { method: dataObj === null ? 'DELETE' : 'PUT' };
+                if (dataObj !== null) options.body = JSON.stringify(dataObj);
+                await fetch(`${DB_URL}/nmms_config/${nodePath}.json?auth=${DB_SECRET}`, options);
+            } catch (e) { showIsland("Sync Error", "error"); }
+        }
+
+        function logout() { location.reload(); }
+
+        function nav(viewId, el, title) {
+            document.querySelectorAll('.view').forEach(v => { v.style.display = 'none'; v.classList.remove('active'); });
+            const nv = document.getElementById('view-' + viewId);
+            nv.style.display = 'block';
+            nv.classList.add('active');
+
+            const fabKey = document.getElementById('fab-add-key');
+            const fabBan = document.getElementById('fab-add-ban');
+            
+            if (isLoggedIn) {
+                if (viewId === 'keys') {
+                    fabKey.style.display = 'flex'; fabBan.style.display = 'none';
+                } else if (viewId === 'bans') {
+                    fabBan.style.display = 'flex'; fabKey.style.display = 'none';
+                } else {
+                    fabKey.style.display = 'none'; fabBan.style.display = 'none';
+                }
+            }
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.getElementById('page-title-text').innerText = title;
+        }
+
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModals(); }); });
+
+        function copyToClipboard(text, label, event) {
+            if (event) event.stopPropagation(); 
+            const el = document.createElement('textarea'); el.value = text;
+            document.body.appendChild(el); el.select();
+            try { document.execCommand('copy'); showIsland(trans('msg_copy'), "success", "fa-copy"); } catch (e) {}
+            document.body.removeChild(el);
+        }
+
+        function copyKeyFormat(keyId, hwid, event) {
+            if (event) event.stopPropagation();
+            const textToCopy = `Key: ${keyId}\nDevice ID: ${hwid || 'Not Bound'}`;
+            copyToClipboard(textToCopy, 'Key Format', null);
+        }
+
+        /* --- EDITABLE LIVE PREVIEW SYNC --- */
+        // Maps preview editable elements to JSON config inputs
+        const previewMap = {
+            'pv-title': 'ui-main-title',
+            'pv-notice-box': 'ui-notice',
+            'pv-apk-lbl': 'ui-apk-lbl',
+            'pv-key-lbl': 'ui-key-lbl',
+            'pv-key-hint': 'ui-key-hint',
+            'pv-btn-copy': 'ui-btn-copy',
+            'pv-btn-paste': 'ui-btn-paste',
+            'pv-btn-admin': 'ui-btn-admin',
+            'pv-btn-trial': 'ui-btn-trial',
+            'pv-btn-login': 'ui-btn-login',
+            'pv-watermark': 'ui-watermark'
+        };
+
+        function updateFromPreview(previewId) {
+            const inputId = previewMap[previewId];
+            if(inputId) {
+                const val = document.getElementById(previewId).innerText;
+                document.getElementById(inputId).value = val;
+            }
+        }
+
+        function syncToPreview() {
+            const avatarUrl = document.getElementById('cfg-avatar').value;
+            if (avatarUrl) document.getElementById('pv-avatar').src = avatarUrl;
+            
+            document.getElementById('pv-title').innerText = document.getElementById('ui-main-title').value || "Berlin Mods";
+            document.getElementById('pv-notice-box').innerText = document.getElementById('ui-notice').value || "For Activation Key:- Copy your APK ID & send it to Admin";
+            document.getElementById('pv-apk-lbl').innerText = document.getElementById('ui-apk-lbl').value || "APK ID";
+            document.getElementById('pv-key-lbl').innerText = document.getElementById('ui-key-lbl').value || "ACTIVATION KEY";
+            document.getElementById('pv-key-hint').innerText = document.getElementById('ui-key-hint').value || "Enter key";
+            document.getElementById('pv-btn-copy').innerText = document.getElementById('ui-btn-copy').value || "COPY";
+            document.getElementById('pv-btn-paste').innerText = document.getElementById('ui-btn-paste').value || "PASTE";
+            document.getElementById('pv-btn-login').innerText = document.getElementById('ui-btn-login').value || "LOGIN";
+            document.getElementById('pv-btn-admin').innerText = document.getElementById('ui-btn-admin').value || "ADMIN";
+            document.getElementById('pv-btn-trial').innerText = document.getElementById('ui-btn-trial').value || "TRIAL";
+            document.getElementById('pv-watermark').innerText = document.getElementById('ui-watermark').value || "Panel: DPMods ✧";
+
+            const trialActive = document.getElementById('trl-status').checked;
+            document.getElementById('pv-btn-trial').style.display = trialActive ? 'block' : 'none';
+        }
+
+        /* --- CONFIG LOGIC --- */
+        function loadConfig() {
+            const cfg = DB.nmms_config || {};
+            const ui = cfg.ui_texts || {};
+            const upd = cfg.update || {};
+            const trl = cfg.trial || {};
+
+            document.getElementById('cfg-dialog').checked = cfg.show_dialog !== false;
+            document.getElementById('cfg-avatar').value = cfg.avatar_url || "";
+            document.getElementById('cfg-admin-link').value = cfg.admin_link || "";
+            document.getElementById('cfg-ban-msg').value = cfg.default_ban_message || "";
+
+            document.getElementById('ui-main-title').value = ui.main_title || "";
+            document.getElementById('ui-ban-title').value = ui.ban_title || "";
+            document.getElementById('ui-notice').value = ui.notice_text || "";
+            document.getElementById('ui-apk-lbl').value = ui.apk_id_label || "";
+            document.getElementById('ui-key-lbl').value = ui.key_label || "";
+            document.getElementById('ui-key-hint').value = ui.key_hint || "";
+            document.getElementById('ui-btn-copy').value = ui.btn_copy || "";
+            document.getElementById('ui-btn-paste').value = ui.btn_paste || "";
+            document.getElementById('ui-btn-login').value = ui.btn_login || "";
+            document.getElementById('ui-btn-admin').value = ui.btn_admin || "";
+            document.getElementById('ui-btn-trial').value = ui.btn_trial || "";
+            document.getElementById('ui-watermark').value = ui.watermark_text || "";
+
+            document.getElementById('upd-status').checked = upd.status === true;
+            document.getElementById('upd-title').value = upd.title || "";
+            document.getElementById('upd-msg').value = upd.message || "";
+            document.getElementById('upd-btn').value = upd.btn_text || "";
+            document.getElementById('upd-url').value = upd.url || "";
+
+            document.getElementById('trl-status').checked = trl.is_active === true;
+            document.getElementById('trl-mins').value = trl.duration_mins || 5;
+
+            syncToPreview();
+        }
+
+        async function saveConfig() {
+            const newConfig = {
+                show_dialog: document.getElementById('cfg-dialog').checked,
+                avatar_url: document.getElementById('cfg-avatar').value.trim(),
+                admin_link: document.getElementById('cfg-admin-link').value.trim(),
+                default_ban_message: document.getElementById('cfg-ban-msg').value.trim(),
+                ui_texts: {
+                    main_title: document.getElementById('ui-main-title').value.trim(),
+                    ban_title: document.getElementById('ui-ban-title').value.trim(),
+                    notice_text: document.getElementById('ui-notice').value.trim(),
+                    apk_id_label: document.getElementById('ui-apk-lbl').value.trim(),
+                    key_label: document.getElementById('ui-key-lbl').value.trim(),
+                    key_hint: document.getElementById('ui-key-hint').value.trim(),
+                    btn_copy: document.getElementById('ui-btn-copy').value.trim(),
+                    btn_paste: document.getElementById('ui-btn-paste').value.trim(),
+                    btn_login: document.getElementById('ui-btn-login').value.trim(),
+                    btn_admin: document.getElementById('ui-btn-admin').value.trim(),
+                    btn_trial: document.getElementById('ui-btn-trial').value.trim(),
+                    watermark_text: document.getElementById('ui-watermark').value.trim()
+                },
+                update: {
+                    status: document.getElementById('upd-status').checked,
+                    title: document.getElementById('upd-title').value.trim(),
+                    message: document.getElementById('upd-msg').value.trim(),
+                    btn_text: document.getElementById('upd-btn').value.trim(),
+                    url: document.getElementById('upd-url').value.trim()
+                },
+                trial: {
+                    is_active: document.getElementById('trl-status').checked,
+                    duration_mins: parseInt(document.getElementById('trl-mins').value) || 5
+                },
+                keys: DB.nmms_config.keys || {},
+                banned_devices: DB.nmms_config.banned_devices || {},
+                trials: DB.nmms_config.trials || {}
+            };
+
+            await syncNode('show_dialog', newConfig.show_dialog);
+            await syncNode('avatar_url', newConfig.avatar_url);
+            await syncNode('admin_link', newConfig.admin_link);
+            await syncNode('default_ban_message', newConfig.default_ban_message);
+            await syncNode('ui_texts', newConfig.ui_texts);
+            await syncNode('update', newConfig.update);
+            await syncNode('trial', newConfig.trial);
+
+            showIsland(trans('msg_success'), "success", "fa-cogs");
+        }
+
+        /* --- KEYS OPTIMIZATION --- */
+        function handleSearch() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                visibleKeysCount = PAGE_CHUNK; 
+                renderKeys();
+            }, 250);
+        }
+
+        function setFilter(type, val, el) {
+            currentFilter[type] = val;
+            visibleKeysCount = PAGE_CHUNK; 
+            el.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            if (type === 'keys') renderKeys();
+        }
+
+        function openKeyModal() {
+            document.getElementById('mod-key-id').value = "";
+            const now = new Date(); 
+            now.setMonth(now.getMonth() + 1);
+            document.getElementById('mod-key-date').valueAsDate = now;
+            document.getElementById('chk-bulk').checked = false;
+            document.getElementById('bulk-qty-row').style.display = 'none';
+            document.getElementById('single-key-row').style.display = 'block';
+            document.getElementById('key-modal').classList.add('active');
+        }
+
+        function randomKey() { 
+            document.getElementById('mod-key-id').value = 'DP-' + Math.floor(100000 + Math.random() * 900000).toString(); 
+        }
+
+        async function saveKey() {
+            const isBulk = document.getElementById('chk-bulk').checked;
+            const expDate = document.getElementById('mod-key-date').value;
+            if (!expDate) return;
+
+            let newKeysObj = {};
+            if (isBulk) {
+                const qty = parseInt(document.getElementById('mod-bulk-qty').value) || 10;
+                for (let i = 0; i < qty; i++) {
+                    let newId;
+                    do { 
+                        newId = 'DP-' + Math.floor(100000 + Math.random() * 900000).toString(); 
+                    } while (DB.nmms_config.keys[newId] || newKeysObj[newId]); 
+                    
+                    newKeysObj[newId] = { device_id: "", expires_date: expDate };
+                    DB.nmms_config.keys[newId] = newKeysObj[newId];
+                }
+            } else {
+                const keyId = document.getElementById('mod-key-id').value.trim();
+                if (!keyId) return;
+                if (DB.nmms_config.keys[keyId]) return showIsland("Key already exists!", "error");
+                
+                newKeysObj[keyId] = { device_id: "", expires_date: expDate };
+                DB.nmms_config.keys[keyId] = newKeysObj[keyId];
+            }
+
+            try {
+                await fetch(`${DB_URL}/nmms_config/keys.json?auth=${DB_SECRET}`, { method: 'PATCH', body: JSON.stringify(newKeysObj) });
+                showIsland(trans('msg_success'), "success", "fa-key");
+            } catch (e) {}
+            
+            closeModals(); 
+            renderKeys();
+        }
+
+        function openEditKeyModal(keyId) {
+            const data = DB.nmms_config.keys[keyId] || {};
+            document.getElementById('edit-key-id').value = keyId;
+            document.getElementById('edit-key-hwid').value = data.device_id || "";
+            if (data.expires_date) document.getElementById('edit-key-date').value = data.expires_date;
+            document.getElementById('edit-key-modal').classList.add('active');
+        }
+
+        async function saveEditedKey() {
+            const keyId = document.getElementById('edit-key-id').value;
+            const newHwid = document.getElementById('edit-key-hwid').value.trim();
+            const newDate = document.getElementById('edit-key-date').value;
+
+            DB.nmms_config.keys[keyId].device_id = newHwid;
+            DB.nmms_config.keys[keyId].expires_date = newDate;
+            
+            await syncNode(`keys/${keyId}`, DB.nmms_config.keys[keyId]);
+            closeModals(); 
+            renderKeys();
+            showIsland(trans('msg_success'), "success", "fa-pen");
+        }
+
+        async function deleteKey(keyId) {
+            if (confirm(`Delete Key ${keyId}?`)) {
+                delete DB.nmms_config.keys[keyId]; 
+                await syncNode(`keys/${keyId}`, null);
+                renderKeys(); 
+                showIsland(trans('msg_success'), "success", "fa-trash");
+            }
+        }
+
+        async function unlinkShortcut(keyId) {
+            if (confirm(`Unlink Device from ${keyId}?`)) {
+                DB.nmms_config.keys[keyId].device_id = "";
+                await syncNode(`keys/${keyId}/device_id`, "");
+                renderKeys(); 
+                showIsland(trans('msg_success'), "success");
+            }
+        }
+
+        function getKeyStatus(data) {
+            const today = new Date();
+            const exp = new Date(data.expires_date);
+            const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+            const isBound = data.device_id && data.device_id !== "";
+
+            if (diffDays < 0) return { id: 'expired', color: 'var(--danger)' };
+            if (!isBound) return { id: 'inactive', color: 'var(--inactive)' };
+            return { id: 'active', color: 'var(--success)' };
+        }
+
+        function renderKeys() {
+            const list = document.getElementById('keys-list');
+            const loadMoreBox = document.getElementById('keys-load-more-box');
+            const search = document.getElementById('search-keys').value.toLowerCase().trim();
+            
+            const rawKeys = Object.entries(DB.nmms_config.keys || {}).reverse();
+            
+            const filtered = [];
+            for (let i = 0; i < rawKeys.length; i++) {
+                const [keyId, data] = rawKeys[i];
+                const hwid = data.device_id || "";
+                
+                if (search && !keyId.toLowerCase().includes(search) && !hwid.toLowerCase().includes(search)) {
+                    continue;
+                }
+                
+                const statusObj = getKeyStatus(data);
+                if (currentFilter.keys !== 'all' && currentFilter.keys !== statusObj.id) {
+                    continue;
+                }
+                
+                filtered.push({ keyId, data, hwid, statusObj });
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="empty-state">${trans('empty_keys')}</div>`;
+                loadMoreBox.innerHTML = '';
+                return;
+            }
+
+            const sliceToRender = filtered.slice(0, visibleKeysCount);
+            let htmlBuffer = "";
+
+            for (let i = 0; i < sliceToRender.length; i++) {
+                const { keyId, data, hwid, statusObj } = sliceToRender[i];
+
+                let devText = hwid ? 
+                    `<div class="device-row">
+                        <span style="color:var(--success); font-weight:700; font-size:0.75rem;"><i class="fas fa-link"></i> Linked</span>
+                        <span class="interactive-text" style="font-family:'JetBrains Mono', monospace; color:#fff; font-size:0.8rem;" onclick="copyToClipboard('${hwid}', 'HWID', event)">
+                        ${hwid} <i class="fas fa-copy" style="color:var(--text-dim); font-size:0.75rem;"></i></span>
+                    </div>` : 
+                    `<div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:7px; margin-top:8px; border:1px dashed var(--border-glass); border-radius:10px;">Unused Key</div>`;
+
+                let unlinkBtn = hwid ? `<button class="btn-xs" style="color:var(--warning);" onclick="unlinkShortcut('${keyId}')" title="Unlink"><i class="fas fa-unlink"></i></button>` : '';
+
+                htmlBuffer += `
+                    <div class="list-card">
+                        <div class="card-header">
+                            <div class="card-title interactive-text" onclick="copyKeyFormat('${keyId}', '${hwid}', event)">
+                                <span class="status-dot" style="background:${statusObj.color};"></span>
+                                ${keyId}
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-dim); background:var(--bg-card-sub); padding:4px 10px; border-radius:10px;">
+                                <i class="far fa-clock"></i> ${data.expires_date}
+                            </div>
+                        </div>
+                        ${devText}
+                        <div class="card-actions">
+                            ${unlinkBtn}
+                            <button class="btn-xs" style="color:var(--ios-primary);" onclick="openEditKeyModal('${keyId}')"><i class="fas fa-pen"></i></button>
+                            <button class="btn-xs" style="color:var(--danger); background:var(--danger-bg);" onclick="deleteKey('${keyId}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            list.innerHTML = htmlBuffer;
+
+            if (filtered.length > visibleKeysCount) {
+                const remaining = filtered.length - visibleKeysCount;
+                loadMoreBox.innerHTML = `
+                    <button class="load-more-btn" onclick="loadMoreKeys()">
+                        Load More (+${remaining > PAGE_CHUNK ? PAGE_CHUNK : remaining} Keys)
+                    </button>
+                `;
+            } else {
+                loadMoreBox.innerHTML = '';
+            }
+        }
+
+        function loadMoreKeys() {
+            visibleKeysCount += PAGE_CHUNK;
+            renderKeys();
+        }
+
+        /* --- BANS LOGIC --- */
+        function openBanModal() { 
+            document.getElementById('mod-ban-id').value = ''; 
+            document.getElementById('mod-ban-reason').value = ''; 
+            document.getElementById('ban-modal').classList.add('active'); 
+        }
+
+        async function saveBan() {
+            const hwid = document.getElementById('mod-ban-id').value.trim();
+            const reason = document.getElementById('mod-ban-reason').value.trim() || DB.nmms_config.default_ban_message || "Banned by Admin";
+            if (!hwid) return;
+            
+            if (!DB.nmms_config.banned_devices) DB.nmms_config.banned_devices = {};
+            DB.nmms_config.banned_devices[hwid] = reason; 
+            await syncNode(`banned_devices/${hwid}`, reason);
+            closeModals(); 
+            renderBans(); 
+            showIsland(trans('msg_success'), "success", "fa-user-slash");
+        }
+
+        async function unbanHWID(hwid) {
+            if (confirm(`Remove ${hwid}?`)) {
+                delete DB.nmms_config.banned_devices[hwid]; 
+                await syncNode(`banned_devices/${hwid}`, null);
+                renderBans(); 
+                showIsland(trans('msg_success'), "success");
+            }
+        }
+
+        function renderBans() {
+            const list = document.getElementById('bans-list');
+            const search = document.getElementById('search-bans').value.toLowerCase().trim();
+            const banObj = DB.nmms_config.banned_devices || {};
+            const entries = Object.entries(banObj);
+            
+            if (entries.length === 0) {
+                list.innerHTML = `<div class="empty-state">No Banned Devices</div>`;
+                return;
+            }
+
+            let html = "";
+            for (let i = 0; i < entries.length; i++) {
+                const [hwid, reason] = entries[i];
+                if (search && !hwid.toLowerCase().includes(search) && !reason.toLowerCase().includes(search)) continue;
+
+                html += `
+                    <div class="list-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div class="interactive-text" style="color:var(--danger); font-family:'JetBrains Mono', monospace; font-weight:700; font-size:1.05rem;" onclick="copyToClipboard('${hwid}', 'Banned ID', event)">
+                                ${hwid} <i class="fas fa-copy" style="font-size:0.75rem; opacity:0.8;"></i>
+                            </div>
+                            <button class="btn-icon" style="background:var(--danger-bg); color:var(--danger); width:32px; height:32px;" onclick="unbanHWID('${hwid}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-dim); margin-top:10px; background:var(--bg-card-sub); padding:10px 12px; border-radius:10px;">${reason}</div>
+                    </div>`;
+            }
+            list.innerHTML = html || `<div class="empty-state">No Matching Records</div>`;
+        }
+
+        /* --- TRIALS LOGIC --- */
+        async function revokeTrial(hwid) {
+            if (confirm(`Revoke Trial for ${hwid}?`)) {
+                delete DB.nmms_config.trials[hwid]; 
+                await syncNode(`trials/${hwid}`, null);
+                renderTrials(); 
+                showIsland(trans('msg_success'), "success");
+            }
+        }
+
+        function renderTrials() {
+            const list = document.getElementById('trials-list');
+            const search = document.getElementById('search-trials').value.toLowerCase().trim();
+            const trialsObj = DB.nmms_config.trials || {};
+            const entries = Object.entries(trialsObj);
+
+            if (entries.length === 0) {
+                list.innerHTML = `<div class="empty-state">No Active Trials</div>`;
+                return;
+            }
+
+            let html = "";
+            for (let i = 0; i < entries.length; i++) {
+                const [hwid, timestamp] = entries[i];
+                if (search && !hwid.toLowerCase().includes(search)) continue;
+                
+                let timeStr = "Active";
+                try {
+                    let ms = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+                    timeStr = new Date(ms).toLocaleString();
+                } catch(e){}
+
+                html += `
+                    <div class="list-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="interactive-text" style="color:var(--ios-primary); font-family:'JetBrains Mono', monospace; font-weight:700; font-size:1.05rem;" onclick="copyToClipboard('${hwid}', 'Trial ID', event)">
+                                ${hwid} <i class="fas fa-copy" style="font-size:0.75rem; opacity:0.8;"></i>
+                            </div>
+                            <button class="btn-icon" style="background:var(--danger-bg); color:var(--danger); width:32px; height:32px;" onclick="revokeTrial('${hwid}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;"><i class="far fa-clock"></i> Timestamp: ${timeStr}</div>
+                    </div>`;
+            }
+            list.innerHTML = html || `<div class="empty-state">No Matching Records</div>`;
+        }
+
+        let islandTimeout;
+        function showIsland(msg, type = "success", customIcon = null) {
+            const island = document.getElementById('dynamic-island');
+            const iconEl = document.getElementById('di-icon');
+            const msgEl = document.getElementById('di-msg');
+
+            if (customIcon) iconEl.className = `fas ${customIcon}`;
+            else iconEl.className = type === "success" ? `fas fa-check-circle` : `fas fa-exclamation-triangle`;
+            
+            iconEl.style.color = type === "success" ? "var(--ios-primary)" : "var(--danger)";
+            msgEl.innerText = msg;
+            
+            island.classList.add('show');
+            clearTimeout(islandTimeout);
+            islandTimeout = setTimeout(() => { island.classList.remove('show'); }, 2600); 
+        }
+            <!-- Netlify Popup Killer Script -->
+   
+        const observer = new MutationObserver((mutations) => {
+            document.querySelectorAll('[id*="netlify"], [class*="netlify"], netlify-badge').forEach(el => el.remove());
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // Backup Cleanup
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelectorAll('[id*="netlify"]').forEach(el => el.remove());
+            }, 1000);
+        });
+    
+    </script>
+</body>
+</html>
